@@ -61,7 +61,9 @@ cbp-segmented-button-group {
       }
       
       // Disabled
-      [disabled]  {
+      [disabled],
+      &[disabled],
+      &:has([disabled]) {
         --cbp-button-color: var(--cbp-color-interactive-disabled-dark);
         --cbp-button-color-bg: var(--cbp-color-interactive-disabled-light);
 

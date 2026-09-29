@@ -21,6 +21,10 @@ export default {
       description: 'Accessibility text is applied as an `aria-label` to the group to add context to its purpose.',
       type: 'string',
     },
+    disabled: {
+      description: 'Specifies whether all buttons within the segmented button group are disabled.',
+      control: 'boolean',
+    },
     sx: {
       description: 'Supports adding inline styles as an object of key-value pairs comprised of CSS properties and values. Values should reference design tokens when possible.',
       control: 'object',
@@ -79,6 +83,28 @@ SegmentedButtonGroup.args = {
       value: 'lg',
       pressed: false,
       disabled: false,
+    },
+  ],
+};
+
+export const Disabled: any = Template.bind({});
+Disabled.args = {
+  disabled: true,
+  buttons: [
+    {
+      label: 'Small',
+      value: 'sm',
+      pressed: false,
+    },
+    {
+      label: 'Medium',
+      value: 'md',
+      pressed: true,
+    },
+    {
+      label: 'Large',
+      value: 'lg',
+      pressed: false,
     },
   ],
 };
