@@ -192,6 +192,7 @@ export class CbpDropdown {
         }, 50);
 
         this.updateValue(value,newValue);
+        this.multiSelectReorderSelected();
 
         // send focus back to the control in case it was trapped in a checkbox
         this.control.focus();
@@ -253,6 +254,9 @@ export class CbpDropdown {
   watchOpen(newValue) {
     // If the menu was opened, give it time to render and set focus to the selected/first item
     if (newValue) {
+      if (this.multiple) {
+        this.multiSelectReorderSelected();
+      }
       // Reassigning this.dropdownitems breaks the rendering for some reason. The array is not the same as when generated.
       //this.dropdownItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item')); // Get and set this array whenever the menu is opened
       
@@ -387,16 +391,59 @@ export class CbpDropdown {
   }
 
 
-  // TODO: Reorder multi-select dropdowns with selected items at the start (only works with JSON items)
-  /*
   multiSelectReorderSelected() {
-    itemsJSON = 
-    let selectedItems = this.items.filter( (item) =>  item.value ? this.value.includes(item.value) : this.value.includes(item.label));
-    let unselectedItems = this.items.filter( (item) =>  item.value ? !e.detail.value.includes(item.value) : !e.detail.value.includes(item.label));
-    // return the filtered JSON result to the component via the items property
-    this.items = [...selectedItems, ...unselectedItems];
+    if (!this.multiple) return;
+
+    if (this.items) {
+      let itemsArray = typeof this.items === 'string' ? (JSON.parse(this.items) || []) : this.items;
+      if (Array.isArray(itemsArray) && itemsArray.length > 0) {
+        const currentValues = Array.isArray(this.value)
+          ? this.value
+          : (typeof this.value === 'string' && this.value ? this.value.split(',') : []);
+
+        const updatedItems = itemsArray.map((item: any) => {
+          const val = item.value !== undefined ? `${item.value}` : item.label;
+          const selected = currentValues.includes(val);
+          return 'selected' in item ? { ...item, selected } : item;
+        });
+
+        const selectedItems = updatedItems.filter((item: any) => {
+          const val = item.value !== undefined ? `${item.value}` : item.label;
+          return currentValues.includes(val);
+        });
+        const unselectedItems = updatedItems.filter((item: any) => {
+          const val = item.value !== undefined ? `${item.value}` : item.label;
+          return !currentValues.includes(val);
+        });
+        this.items = [...selectedItems, ...unselectedItems];
+      }
+    } else {
+      const slottedItems = Array.from(
+        this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results):not(.cbp-dropdown-create-item)')
+      ) as HTMLCbpDropdownItemElement[];
+
+      if (slottedItems.length > 0) {
+        const currentValues = Array.isArray(this.value)
+          ? this.value
+          : (typeof this.value === 'string' && this.value ? this.value.split(',') : []);
+
+        const isSlottedSelected = (item: HTMLCbpDropdownItemElement) => {
+          const val = item.value !== undefined && item.value !== '' ? item.value : item.innerText.trim();
+          return item.selected || currentValues.includes(val);
+        };
+
+        const selectedSlotted = slottedItems.filter(isSlottedSelected);
+        const unselectedSlotted = slottedItems.filter(item => !isSlottedSelected(item));
+
+        [...selectedSlotted, ...unselectedSlotted].forEach(item => {
+          this.host.appendChild(item);
+        });
+        this.dropdownItems = Array.from(
+          this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results)')
+        );
+      }
+    }
   }
-  */
 
   // Create a new dropdown item (and select it) after the user clicked the "Create" item
   doCreateItem(e: CustomEvent){
@@ -502,6 +549,7 @@ export class CbpDropdown {
       });
       // Updating this state will cause a re-render and the number on the multi-select to update
       this.selectedItems.length > 0 ? this.selectedItems=[...selectedItems] : this.selectedItems=[];
+      this.multiSelectReorderSelected();
     }
 
     // Single select
@@ -1078,6 +1126,10 @@ export class CbpDropdown {
     // If there are no selected items, but a value is specified, set those items as selected
     if (!this.selectedItems.length && !!this.value) {
       this.setSelectedFromValue();
+    }
+
+    if (this.multiple) {
+      this.multiSelectReorderSelected();
     }
 
     this.initialValue = this.value;
