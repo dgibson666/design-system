@@ -16,6 +16,7 @@ export class SegmentedButtonGroup {
   
   private buttongroup = []; // An array of all buttons registered (loaded)
   private initialValue: any; // string | object; - Save the initial value to support reset functionality
+  private initialDisabledStates = new Map<HTMLElement, boolean>();
 
   @Element() private host: HTMLElement;
 
@@ -38,8 +39,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies whether all buttons in the segmented button group are disabled. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -57,17 +58,41 @@ export class SegmentedButtonGroup {
     this.value=this.initialValue;
   }
 
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    this.updateButtonsDisabledState(newValue);
+  }
+
+  private updateButtonsDisabledState(groupDisabled: boolean) {
+    this.buttongroup.forEach(cbpButton => {
+      if (groupDisabled) {
+        cbpButton.disabled = true;
+      } else {
+        const initial = this.initialDisabledStates.get(cbpButton) ?? false;
+        cbpButton.disabled = initial;
+      }
+    });
+  }
+
   @Listen('componentLoad')
   handleComponentLoad({ detail: { nativeElement: element, host } }) {
     if (element) {
-      this.buttongroup = [
-        ...this.buttongroup, host
-      ];
+      if (!this.buttongroup.includes(host)) {
+        this.buttongroup = [
+          ...this.buttongroup, host
+        ];
+        this.initialDisabledStates.set(host, host.disabled || host.hasAttribute('disabled'));
+      }
+      if (this.disabled) {
+        host.disabled = true;
+      }
     }
   }
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) return;
+
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -140,6 +165,11 @@ export class SegmentedButtonGroup {
       }
     });
 
+    // Apply disabled state if set on group
+    if (this.disabled) {
+      this.updateButtonsDisabledState(true);
+    }
+
     // Set the pressed states from the value, if set
     if(this.value != undefined) this.watchValueHandler(this.value);
     // Set the value from the pressed states
@@ -154,7 +184,7 @@ export class SegmentedButtonGroup {
       <Host role="group" aria-label={this.accessibilityText}>
         <slot />
         { this.name && 
-            <input type="hidden" name={this.name} value={this.value} />
+            <input type="hidden" name={this.name} value={this.value} disabled={this.disabled} />
         }
       </Host>
     );
