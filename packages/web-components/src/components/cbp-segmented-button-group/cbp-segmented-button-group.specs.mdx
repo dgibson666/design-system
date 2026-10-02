@@ -13,12 +13,14 @@ The Segmented Button Group component wraps multiple buttons and can be used as a
 * The Segmented Button Group is a wrapper for child Button components.
 * The group may allow only one option to be selected (pressed) at a time, or multiple items to be selected.
 * The group may be used as a simple UI toggle or may optionally pass a name/value pair as a form element.
+* The group may be disabled by setting the `disabled` property, which disables all buttons in the group.
 
 ## Technical Specifications
 
 ### User Interactions
 
 * Activating any of the buttons within the group toggles the `pressed` property and likewise `aria-pressed` value on the button element.
+* When the group has `disabled` specified, all buttons within the group are set to disabled and user interactions are ignored.
 * If the group allows only one button to be active:
   * When pressing a button, all others will be programmatically "unpressed."
   * Pressing a button again does not toggle it "unpressed"; it stays pressed, like a radio button.
