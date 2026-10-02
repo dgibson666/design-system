@@ -64,6 +64,9 @@ export class CbpDropdown {
    */
   @Prop({ reflect: true }) multiple: boolean = false;
 
+  /** Specifies whether selected items in a multi-select dropdown should be reordered to the start of the list. */
+  @Prop({ reflect: true }) reorder: boolean = false;
+
   /** Specifies whether the dropdown accepts key presses to filter results, enabling combobox functionality. */
   @Prop({ reflect: true }) filter: boolean = false;
 
@@ -193,6 +196,10 @@ export class CbpDropdown {
 
         this.updateValue(value,newValue);
 
+        if (this.reorder) {
+          this.multiSelectReorderSelected();
+        }
+
         // send focus back to the control in case it was trapped in a checkbox
         this.control.focus();
       }
@@ -261,6 +268,10 @@ export class CbpDropdown {
         this.dropdownItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results)')); // Get and set this array whenever the menu is opened
         this.selectedItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item[selected]'));
       }
+
+      if (this.multiple && this.reorder) {
+        this.multiSelectReorderSelected();
+      }
       
       // Set the default Item for keyboard navigation if the items are already defined (otherwise, do it after re-rendering)
       if (this.dropdownItems.length) this.setDefaultItem();
@@ -296,6 +307,13 @@ export class CbpDropdown {
       this.setSelectedFromValue();
     }
     //else console.log('Value Watch on dropdown fired - component and form values already match, so no action needed.');
+  }
+
+  @Watch('reorder')
+  watchReorder(newValue) {
+    if (newValue && this.multiple) {
+      this.multiSelectReorderSelected();
+    }
   }
 
   @Watch('items')
@@ -340,6 +358,10 @@ export class CbpDropdown {
     this.value=this.initialValue;
     
     if (this.value != '') this.setSelectedFromValue(); // TechDebt: this is not working fully for multi-select
+
+    if (this.multiple && this.reorder) {
+      this.multiSelectReorderSelected();
+    }
   }
 
   /** 
@@ -359,6 +381,9 @@ export class CbpDropdown {
     // Update the selectedItems state after all of the items have been deselected
     setTimeout(() => {
       this.selectedItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item[selected]'));
+      if (this.multiple && this.reorder) {
+        this.multiSelectReorderSelected();
+      }
     }, 100);
 
     // Emit the custom valueChange event only when triggered by the user from the built-in counter pill control
@@ -387,16 +412,32 @@ export class CbpDropdown {
   }
 
 
-  // TODO: Reorder multi-select dropdowns with selected items at the start (only works with JSON items)
-  /*
-  multiSelectReorderSelected() {
-    itemsJSON = 
-    let selectedItems = this.items.filter( (item) =>  item.value ? this.value.includes(item.value) : this.value.includes(item.label));
-    let unselectedItems = this.items.filter( (item) =>  item.value ? !e.detail.value.includes(item.value) : !e.detail.value.includes(item.label));
-    // return the filtered JSON result to the component via the items property
-    this.items = [...selectedItems, ...unselectedItems];
+  /**
+   * A public method to reorder multi-select dropdown items so that selected items appear at the start of the list.
+   */
+  @Method()
+  async multiSelectReorderSelected() {
+    if (!this.multiple) return;
+
+    if (this.items) {
+      this.generatedItems = this.generateItems(this.items);
+    } else {
+      const items = Array.from(
+        this.host.querySelectorAll<HTMLCbpDropdownItemElement>(
+          'cbp-dropdown-item:not(.cbp-dropdown-item-no-results):not(.cbp-dropdown-create-item)'
+        )
+      );
+      if (items.length === 0) return;
+
+      const selected = items.filter(item => item.selected);
+      const unselected = items.filter(item => !item.selected);
+      const reordered = [...selected, ...unselected];
+
+      reordered.forEach(item => this.host.appendChild(item));
+      this.dropdownItems = reordered;
+      this.selectedItems = reordered.filter(item => item.selected);
+    }
   }
-  */
 
   // Create a new dropdown item (and select it) after the user clicked the "Create" item
   doCreateItem(e: CustomEvent){
@@ -572,6 +613,20 @@ export class CbpDropdown {
     // Search the JSON to see if selected items are being set explicitly
     const SelectedItems = items.filter( (item) => ('selected' in item && !!item.selected) );
     const Selected = SelectedItems.length ? true : false;
+
+    // Reorder items for multi-select if reorder prop is set
+    if (this.multiple && this.reorder && Array.isArray(items)) {
+      const isItemSelected = (itemObj) => {
+        if (Selected) return !!itemObj.selected;
+        const val = itemObj.value !== undefined ? `${itemObj.value}` : `${itemObj.label}`;
+        if (Array.isArray(this.value)) return this.value.includes(val);
+        if (typeof this.value === 'string') return this.value.split(',').includes(val);
+        return false;
+      };
+      const selectedItemsList = items.filter(itemObj => isItemSelected(itemObj));
+      const unselectedItemsList = items.filter(itemObj => !isItemSelected(itemObj));
+      items = [...selectedItemsList, ...unselectedItemsList];
+    }
     
     // If selections specified via JSON items, rebuild the value
     if(Selected) newValue = [];
@@ -1078,6 +1133,10 @@ export class CbpDropdown {
     // If there are no selected items, but a value is specified, set those items as selected
     if (!this.selectedItems.length && !!this.value) {
       this.setSelectedFromValue();
+    }
+
+    if (this.multiple && this.reorder) {
+      this.multiSelectReorderSelected();
     }
 
     this.initialValue = this.value;
