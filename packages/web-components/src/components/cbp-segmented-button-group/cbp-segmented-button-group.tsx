@@ -38,8 +38,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies that the segmented button group and all child buttons are disabled. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -57,17 +57,39 @@ export class SegmentedButtonGroup {
     this.value=this.initialValue;
   }
 
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    this.updateButtonsDisabledState(newValue);
+  }
+
+  updateButtonsDisabledState(isDisabled: boolean) {
+    const buttons = Array.from(this.host ? this.host.querySelectorAll('cbp-button') : []);
+    const buttonGroup = this.buttongroup || [];
+    const allButtons = new Set([...buttons, ...buttonGroup]);
+    allButtons.forEach((cbpButton: any) => {
+      cbpButton.disabled = isDisabled;
+    });
+  }
+
   @Listen('componentLoad')
   handleComponentLoad({ detail: { nativeElement: element, host } }) {
     if (element) {
-      this.buttongroup = [
-        ...this.buttongroup, host
-      ];
+      if (!this.buttongroup.includes(host)) {
+        this.buttongroup = [
+          ...this.buttongroup, host
+        ];
+      }
+      if (this.disabled) {
+        host.disabled = true;
+      }
     }
   }
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) {
+      return;
+    }
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -130,9 +152,16 @@ export class SegmentedButtonGroup {
     setCSSProps(this.host, {
       ...this.sx,
     });
+    if (this.disabled) {
+      this.updateButtonsDisabledState(true);
+    }
   }
 
   componentDidLoad() {
+    if (this.disabled) {
+      this.updateButtonsDisabledState(this.disabled);
+    }
+
     // Set the pressed state of each button to "false" if it's not set to "true" already.
     this.buttongroup.forEach( cbpButton => {
       if(cbpButton.pressed !== "true"){
@@ -154,7 +183,7 @@ export class SegmentedButtonGroup {
       <Host role="group" aria-label={this.accessibilityText}>
         <slot />
         { this.name && 
-            <input type="hidden" name={this.name} value={this.value} />
+            <input type="hidden" name={this.name} value={this.value} disabled={this.disabled} />
         }
       </Host>
     );
