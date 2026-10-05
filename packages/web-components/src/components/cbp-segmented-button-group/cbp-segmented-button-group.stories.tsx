@@ -17,6 +17,10 @@ export default {
       description: 'Specifies whether multiple buttons may remain pressed at the same time. Defaults to false (only a single button in the group may be in a pressed state).',
       control: 'boolean',
     },
+    disabled: {
+      description: 'Marks all buttons in the segmented button group as disabled.',
+      control: 'boolean',
+    },
     accessibilityText: {
       description: 'Accessibility text is applied as an `aria-label` to the group to add context to its purpose.',
       type: 'string',
