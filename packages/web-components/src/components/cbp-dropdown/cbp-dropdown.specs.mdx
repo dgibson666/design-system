@@ -31,6 +31,7 @@ The Dropdown component offers an alternative to the native select element that c
 * For single select dropdowns, dropdown items may have individual values specified, separate from the visible label (similar to a native select option element).
 * For multi-select dropdowns, a `cbp-checkbox` is expected to be slotted within each dropdown item and a native checkbox control within the `cbp-checkbox`.
   * If items are specified via JSON, the `cbp-checkbox` will be automatically rendered for multi-select dropdowns.
+  * Selected items in a multi-select dropdown are automatically reordered to the top/start of the list.
 * The Dropdown supports keyboard navigation using the combobox accessibility paradigm and `aria-activedescendant`.
 * The single-select Dropdown may have default "placeholder" text specified when there is no selection.
 * For comboboxes (with filtering enabled), the option to create an item is also supported.
@@ -82,6 +83,7 @@ The Dropdown component offers an alternative to the native select element that c
 * Activating a Dropdown Item will do the following for multi-select dropdowns:
   * Emit an event, which is listened for by the parent Dropdown component.
   * Toggle its `selected` value and checkbox's checked state.
+  * Reorder selected items to appear at the top/start of the list.
   * Update the Dropdown control to show the number of selected items.
   * Update the value of the hidden input field to the value of the clicked Dropdown Item. For multi-select dropdowns, this field's value is an array of checkbox values of the selected items.
   * Emit a valueChange event from the parent Dropdown component.
