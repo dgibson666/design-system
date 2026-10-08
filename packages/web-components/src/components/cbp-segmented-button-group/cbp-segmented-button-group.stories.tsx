@@ -21,6 +21,10 @@ export default {
       description: 'Accessibility text is applied as an `aria-label` to the group to add context to its purpose.',
       type: 'string',
     },
+    disabled: {
+      description: 'Specifies that the segmented button group and all contained buttons are disabled.',
+      control: 'boolean',
+    },
     sx: {
       description: 'Supports adding inline styles as an object of key-value pairs comprised of CSS properties and values. Values should reference design tokens when possible.',
       control: 'object',
