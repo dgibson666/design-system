@@ -281,3 +281,31 @@ DebugDropdown.args = {
   name: 'multiselect',
   value: '',
 };
+
+const MultiSelectReorderTemplate: any = ({ label, description, fieldId, name, placeholder }) => {
+  return `
+    <cbp-form-field
+      ${label ? `label="${label}"` : ''}
+      ${description ? `description="${description}"` : ''}
+      ${fieldId ? `field-id="${fieldId}"` : ''}
+    >
+      <cbp-dropdown
+        ${name ? `name="${name}"` : ''}
+        ${fieldId ? `field-id="${fieldId}"` : ''}
+        ${placeholder ? `placeholder="${placeholder}"` : ''}
+        multiple
+        value="AZ,AK"
+        items='[{"label":"Alabama","value":"AL"},{"label":"Alaska","value":"AK"},{"label":"Arizona","value":"AZ"}]'
+      >
+      </cbp-dropdown>
+    </cbp-form-field>
+  `;
+};
+
+export const MultiSelectReorderJSON = MultiSelectReorderTemplate.bind({});
+MultiSelectReorderJSON.storyName = "Multi-Select Reorder JSON";
+MultiSelectReorderJSON.args = {
+  label: "Multi-Select Reorder (JSON)",
+  description: "Selected items (Arizona, Alaska) should be reordered to the top.",
+  name: 'multiselect-reorder-json',
+};
