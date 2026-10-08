@@ -38,8 +38,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies that the segmented button group and all contained buttons are disabled. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -60,6 +60,9 @@ export class SegmentedButtonGroup {
   @Listen('componentLoad')
   handleComponentLoad({ detail: { nativeElement: element, host } }) {
     if (element) {
+      if (this.disabled) {
+        host.disabled = true;
+      }
       this.buttongroup = [
         ...this.buttongroup, host
       ];
@@ -68,6 +71,7 @@ export class SegmentedButtonGroup {
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) return;
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -99,6 +103,13 @@ export class SegmentedButtonGroup {
         nativeEvent: e
       });
     },10);
+  }
+
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    this.buttongroup.forEach(item => {
+      item.disabled = newValue;
+    });
   }
 
   @Watch('value')
@@ -137,6 +148,9 @@ export class SegmentedButtonGroup {
     this.buttongroup.forEach( cbpButton => {
       if(cbpButton.pressed !== "true"){
         cbpButton.pressed="false";
+      }
+      if (this.disabled) {
+        cbpButton.disabled = true;
       }
     });
 
