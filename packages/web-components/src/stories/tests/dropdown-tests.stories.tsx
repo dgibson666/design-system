@@ -281,3 +281,40 @@ DebugDropdown.args = {
   name: 'multiselect',
   value: '',
 };
+
+const MultiSelectReorderTemplate: any = ({ label, name, fieldId, value, items, multiple }) => {
+  return `
+    <cbp-form-field label="${label}">
+      <cbp-dropdown
+        name="${name}"
+        field-id="${fieldId}"
+        ${value ? `value="${value}"` : ''}
+        ${multiple ? 'multiple' : ''}
+        ${items ? `items='${JSON.stringify(items)}'` : ''}
+      >
+        ${!items ? generateMultiSelectItems(ShortList, name, undefined) : ''}
+      </cbp-dropdown>
+    </cbp-form-field>
+  `;
+};
+
+export const MultiSelectReorderSlotted = MultiSelectReorderTemplate.bind({});
+MultiSelectReorderSlotted.storyName = "Multi-Select Reorder - Slotted";
+MultiSelectReorderSlotted.args = {
+  label: "Multi-Select Reorder Slotted",
+  name: "multiselect-slotted",
+  fieldId: "multiselect-slotted-id",
+  value: "AZ",
+  multiple: true,
+};
+
+export const MultiSelectReorderJSON = MultiSelectReorderTemplate.bind({});
+MultiSelectReorderJSON.storyName = "Multi-Select Reorder - JSON";
+MultiSelectReorderJSON.args = {
+  label: "Multi-Select Reorder JSON",
+  name: "multiselect-json",
+  fieldId: "multiselect-json-id",
+  value: "AZ",
+  items: ShortList,
+  multiple: true,
+};
