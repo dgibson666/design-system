@@ -38,8 +38,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies that the button group is disabled, disabling all buttons within the group. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -60,6 +60,9 @@ export class SegmentedButtonGroup {
   @Listen('componentLoad')
   handleComponentLoad({ detail: { nativeElement: element, host } }) {
     if (element) {
+      if (this.disabled) {
+        host.disabled = true;
+      }
       this.buttongroup = [
         ...this.buttongroup, host
       ];
@@ -68,6 +71,8 @@ export class SegmentedButtonGroup {
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) return;
+
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -99,6 +104,13 @@ export class SegmentedButtonGroup {
         nativeEvent: e
       });
     },10);
+  }
+
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    this.buttongroup.forEach(item => {
+      item.disabled = newValue;
+    });
   }
 
   @Watch('value')
@@ -144,6 +156,10 @@ export class SegmentedButtonGroup {
     if(this.value != undefined) this.watchValueHandler(this.value);
     // Set the value from the pressed states
     else this.setValueFromButtons();
+
+    if (this.disabled) {
+      this.watchDisabledHandler(this.disabled);
+    }
     
     this.initialValue = this.value;
   }
@@ -154,7 +170,7 @@ export class SegmentedButtonGroup {
       <Host role="group" aria-label={this.accessibilityText}>
         <slot />
         { this.name && 
-            <input type="hidden" name={this.name} value={this.value} />
+            <input type="hidden" name={this.name} value={this.value} disabled={this.disabled} />
         }
       </Host>
     );
