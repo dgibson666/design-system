@@ -27,6 +27,10 @@ export default {
       control: 'boolean',
       if: { arg: 'multiple', eq: true },
     },
+    reorder: {
+      control: 'boolean',
+      if: { arg: 'multiple', eq: true },
+    },
     filter: {
       control: 'boolean',
     },
@@ -113,7 +117,7 @@ const Countries=[{"label":"Afghanistan"},{"label":"Albania"},{"label":"Algeria"}
 // Custom dataset: 
 const Custom=[{"label":"Option 1","value":"1"},{"label":"Option 2","value":"2"},{"label":"Option 3","value":"3"},{"label":"Option 4","value":"4"},{"label":"Option 5","value":"5"}];
 
-const Template: any = ({ label, description, fieldId, name, placeholder, multiple, multipleWithChips, filter, async, minimumInputLength, dropdownItems, dataset, items, create, error, readonly, disabled, value, context, sx }) => {
+const Template: any = ({ label, description, fieldId, name, placeholder, multiple, multipleWithChips, reorder, filter, async, minimumInputLength, dropdownItems, dataset, items, create, error, readonly, disabled, value, context, sx }) => {
 
   if (dataset == 'Countries') items = Countries;
   if (dataset == 'States') items = States;
@@ -200,6 +204,7 @@ const Template: any = ({ label, description, fieldId, name, placeholder, multipl
         ${fieldId ? `field-id="${fieldId}"` : ''}
         ${placeholder ? `placeholder="${placeholder}"` : ''}
         ${multiple ? 'multiple' : ''}
+        ${reorder ? 'reorder' : ''}
         ${filter ? 'filter' : ''}
         ${async ? 'async' : ''}
         ${items && dropdownItems == 'JSON' && !async ? `items='${JSON.stringify(items)}'` : ''}
@@ -245,6 +250,18 @@ MultiSelectWithChips.args = {
   dataset: 'Countries',
   multiple: true,
   multipleWithChips: true
+};
+
+export const MultiSelectReorder = Template.bind({});
+MultiSelectReorder.storyName="Multi-Select with Reordering";
+MultiSelectReorder.args = {
+  name: 'dropdown',
+  value: '',
+  fieldId: 'dropdown-id',
+  dropdownItems: 'Slotted',
+  dataset: 'Countries',
+  multiple: true,
+  reorder: true
 };
 
 export const ComboBox = Template.bind({});
