@@ -38,8 +38,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies that the button group is disabled. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -57,17 +57,45 @@ export class SegmentedButtonGroup {
     this.value=this.initialValue;
   }
 
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    this.syncDisabledState(newValue);
+  }
+
+  private syncDisabledState(isDisabled: boolean) {
+    if (this.buttongroup && this.buttongroup.length) {
+      this.buttongroup.forEach(item => {
+        if (isDisabled) item.setAttribute('disabled', '');
+        else item.removeAttribute('disabled');
+      });
+    } else {
+      const buttons: HTMLCbpButtonElement[] = Array.from(this.host.querySelectorAll('cbp-button'));
+      buttons.forEach(item => {
+        if (isDisabled) item.setAttribute('disabled', '');
+        else item.removeAttribute('disabled');
+      });
+    }
+  }
+
   @Listen('componentLoad')
   handleComponentLoad({ detail: { nativeElement: element, host } }) {
     if (element) {
       this.buttongroup = [
         ...this.buttongroup, host
       ];
+      if (this.disabled) {
+        host.setAttribute('disabled', '');
+      }
     }
   }
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) {
+      e.stopPropagation();
+      return;
+    }
+
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -146,6 +174,10 @@ export class SegmentedButtonGroup {
     else this.setValueFromButtons();
     
     this.initialValue = this.value;
+
+    if (this.disabled) {
+      this.syncDisabledState(true);
+    }
   }
 
 
@@ -154,7 +186,7 @@ export class SegmentedButtonGroup {
       <Host role="group" aria-label={this.accessibilityText}>
         <slot />
         { this.name && 
-            <input type="hidden" name={this.name} value={this.value} />
+            <input type="hidden" name={this.name} value={this.value} disabled={this.disabled} />
         }
       </Host>
     );
