@@ -100,9 +100,9 @@ const EmptyDropdownTemplate: any = ({ label, description, fieldId, name, placeho
     const Button = document.querySelector('cbp-button#populateDropdown') as HTMLCbpButtonElement;
     //console.log(Dropdown, Button);
 
-    Button.addEventListener('buttonClick', () => {
+    Button?.addEventListener('buttonClick', () => {
       console.log('Populating dropdown...');
-      Dropdown.items=States;
+      if (Dropdown) Dropdown.items=States;
     });
   }, 500);
 
