@@ -61,12 +61,22 @@ cbp-segmented-button-group {
       }
       
       // Disabled
-      [disabled]  {
+      &:has(button:disabled),
+      &[disabled],
+      [disabled] {
         --cbp-button-color: var(--cbp-color-interactive-disabled-dark);
+        --cbp-button-color-hover: var(--cbp-button-color);
         --cbp-button-color-bg: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-bg-hover: var(--cbp-button-color-bg);
+        --cbp-button-color-border: var(--cbp-color-interactive-disabled-dark);
+        --cbp-button-color-border-hover: var(--cbp-button-color-border);
 
-        --cbp-button-color-dark: var(--cbp-color-interactive-disabled-dark);
-        --cbp-button-color-bg-dark: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-dark: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-hover-dark: var(--cbp-button-color-dark);
+        --cbp-button-color-bg-dark: var(--cbp-color-interactive-disabled-dark);
+        --cbp-button-color-bg-hover-dark: var(--cbp-button-color-bg-dark);
+        --cbp-button-color-border-dark: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-border-hover-dark: var(--cbp-button-color-border-dark);
       }
     }
   }
