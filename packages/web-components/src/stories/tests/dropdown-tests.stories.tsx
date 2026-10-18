@@ -281,3 +281,63 @@ DebugDropdown.args = {
   name: 'multiselect',
   value: '',
 };
+
+const MultiSelectReorderSlottedTemplate: any = ({ label, description, fieldId, name, placeholder, context, sx }) => {
+  return `
+    <cbp-form-field
+      ${label ? `label="${label}"` : ''}
+      ${description ? `description="${description}"` : ''}
+      ${fieldId ? `field-id="${fieldId}"` : ''}
+    >
+      <cbp-dropdown
+        multiple
+        reorder
+        ${name ? `name="${name}"` : ''}
+        ${fieldId ? `field-id="${fieldId}"` : ''}
+        ${placeholder ? `placeholder="${placeholder}"` : ''}
+        ${context && context != 'light-inverts' ? `context="${context}"` : ''}
+        ${sx ? `sx='${JSON.stringify(sx)}'` : ''}
+      >
+        ${generateMultiSelectItems(ShortList, name, context)}
+      </cbp-dropdown>
+    </cbp-form-field>
+  `;
+};
+
+export const MultiSelectReorderSlotted = MultiSelectReorderSlottedTemplate.bind({});
+MultiSelectReorderSlotted.storyName = "Multi-Select Reorder Slotted";
+MultiSelectReorderSlotted.args = {
+  label: "Multi-Select Reorder Slotted",
+  description: "Slotted multi-select with reorder enabled",
+  name: 'reorder-slotted',
+};
+
+const MultiSelectReorderJSONTemplate: any = ({ label, description, fieldId, name, placeholder, context, sx }) => {
+  return `
+    <cbp-form-field
+      ${label ? `label="${label}"` : ''}
+      ${description ? `description="${description}"` : ''}
+      ${fieldId ? `field-id="${fieldId}"` : ''}
+    >
+      <cbp-dropdown
+        multiple
+        reorder
+        ${name ? `name="${name}"` : ''}
+        ${fieldId ? `field-id="${fieldId}"` : ''}
+        ${placeholder ? `placeholder="${placeholder}"` : ''}
+        items='${JSON.stringify(ShortList)}'
+        ${context && context != 'light-inverts' ? `context="${context}"` : ''}
+        ${sx ? `sx='${JSON.stringify(sx)}'` : ''}
+      >
+      </cbp-dropdown>
+    </cbp-form-field>
+  `;
+};
+
+export const MultiSelectReorderJSON = MultiSelectReorderJSONTemplate.bind({});
+MultiSelectReorderJSON.storyName = "Multi-Select Reorder JSON";
+MultiSelectReorderJSON.args = {
+  label: "Multi-Select Reorder JSON",
+  description: "JSON items multi-select with reorder enabled",
+  name: 'reorder-json',
+};
