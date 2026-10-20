@@ -18,6 +18,7 @@ The Dropdown component offers an alternative to the native select element that c
   * Combobox:
     * Single select with type-ahead filtering - items loaded through slot or property.
     * Multi-select with type-ahead filtering - items loaded through slot or property.
+    * Multi-select reordering - when `reorderSelected` is enabled, selected items move to the top of the dropdown menu listbox.
   * Asynchronous combobox: for large data sets where nothing is loaded until X filter characters are typed; requires filter=true, async=true, and loading items via property as JSON.
     * Single select - works normally.
     * Multi-select - requires custom integration with chips to make deselecting items easier since they are not persisted in the dropdown once selected.
@@ -85,6 +86,7 @@ The Dropdown component offers an alternative to the native select element that c
   * Update the Dropdown control to show the number of selected items.
   * Update the value of the hidden input field to the value of the clicked Dropdown Item. For multi-select dropdowns, this field's value is an array of checkbox values of the selected items.
   * Emit a valueChange event from the parent Dropdown component.
+  * If `reorderSelected` is enabled, move selected items to the top of the listbox, preserving relative order.
   * The Dropdown remains open for additional navigation and selection.
 
 ### Responsiveness
