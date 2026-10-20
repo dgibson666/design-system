@@ -64,6 +64,9 @@ export class CbpDropdown {
    */
   @Prop({ reflect: true }) multiple: boolean = false;
 
+  /** Specifies whether selected items in a multi-select dropdown should be reordered to the top of the menu. */
+  @Prop({ reflect: true }) reorderSelected: boolean = false;
+
   /** Specifies whether the dropdown accepts key presses to filter results, enabling combobox functionality. */
   @Prop({ reflect: true }) filter: boolean = false;
 
@@ -189,6 +192,9 @@ export class CbpDropdown {
         setTimeout(() => {
           this.selectedItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item[selected]'));
           this.placeholder = this.selectedItems.length != 1 ? 'Selected Items' : 'Selected Item';
+          if (this.reorderSelected) {
+            this.multiSelectReorderSelected();
+          }
         }, 50);
 
         this.updateValue(value,newValue);
@@ -253,6 +259,9 @@ export class CbpDropdown {
   watchOpen(newValue) {
     // If the menu was opened, give it time to render and set focus to the selected/first item
     if (newValue) {
+      if (this.multiple && this.reorderSelected) {
+        this.multiSelectReorderSelected();
+      }
       // Reassigning this.dropdownitems breaks the rendering for some reason. The array is not the same as when generated.
       //this.dropdownItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item')); // Get and set this array whenever the menu is opened
       
@@ -387,16 +396,64 @@ export class CbpDropdown {
   }
 
 
-  // TODO: Reorder multi-select dropdowns with selected items at the start (only works with JSON items)
-  /*
+  /**
+   * Reorders multi-select dropdown options so that selected items appear at the top of the menu,
+   * preserving relative original order within selected and unselected groups.
+   */
   multiSelectReorderSelected() {
-    itemsJSON = 
-    let selectedItems = this.items.filter( (item) =>  item.value ? this.value.includes(item.value) : this.value.includes(item.label));
-    let unselectedItems = this.items.filter( (item) =>  item.value ? !e.detail.value.includes(item.value) : !e.detail.value.includes(item.label));
-    // return the filtered JSON result to the component via the items property
-    this.items = [...selectedItems, ...unselectedItems];
+    if (!this.multiple) return;
+
+    // Handle items provided via JSON prop
+    if (this.items) {
+      let itemsArr: any[];
+      if (typeof this.items === 'string') {
+        itemsArr = JSON.parse(this.items) || [];
+      } else if (Array.isArray(this.items)) {
+        itemsArr = [...this.items];
+      } else {
+        itemsArr = [];
+      }
+
+      if (itemsArr.length > 0) {
+        const valArray = Array.isArray(this.value)
+          ? this.value
+          : typeof this.value === 'string' && this.value
+          ? this.value.split(',')
+          : [];
+
+        const selectedItems = itemsArr.filter(item => {
+          if ('selected' in item && item.selected) return true;
+          const itemVal = item.value !== undefined ? item.value : item.label;
+          return valArray.includes(String(itemVal));
+        });
+
+        const unselectedItems = itemsArr.filter(item => {
+          if ('selected' in item && item.selected) return false;
+          const itemVal = item.value !== undefined ? item.value : item.label;
+          return !valArray.includes(String(itemVal));
+        });
+
+        const reordered = [...selectedItems, ...unselectedItems];
+        this.items = typeof this.items === 'string' ? JSON.stringify(reordered) : reordered;
+      }
+    } else {
+      // Handle slotted child elements in DOM
+      const allItems = Array.from(
+        this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results):not(.cbp-dropdown-create-item)')
+      ) as HTMLCbpDropdownItemElement[];
+
+      const selected = allItems.filter(item => item.selected);
+      const unselected = allItems.filter(item => !item.selected);
+      const reorderedItems = [...selected, ...unselected];
+
+      // Re-append slotted elements to host to reorder DOM nodes while preserving slot assignment
+      reorderedItems.forEach(item => {
+        this.host.appendChild(item);
+      });
+
+      this.dropdownItems = reorderedItems;
+    }
   }
-  */
 
   // Create a new dropdown item (and select it) after the user clicked the "Create" item
   doCreateItem(e: CustomEvent){
@@ -1078,6 +1135,10 @@ export class CbpDropdown {
     // If there are no selected items, but a value is specified, set those items as selected
     if (!this.selectedItems.length && !!this.value) {
       this.setSelectedFromValue();
+    }
+
+    if (this.multiple && this.reorderSelected) {
+      this.multiSelectReorderSelected();
     }
 
     this.initialValue = this.value;
