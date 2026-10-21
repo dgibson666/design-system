@@ -61,12 +61,17 @@ cbp-segmented-button-group {
       }
       
       // Disabled
-      [disabled]  {
+      &[disabled],
+      [disabled] {
         --cbp-button-color: var(--cbp-color-interactive-disabled-dark);
         --cbp-button-color-bg: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-border: var(--cbp-color-interactive-disabled-dark);
+        --cbp-button-color-border-hover: var(--cbp-color-interactive-disabled-dark);
 
-        --cbp-button-color-dark: var(--cbp-color-interactive-disabled-dark);
-        --cbp-button-color-bg-dark: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-dark: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-bg-dark: var(--cbp-color-interactive-disabled-dark);
+        --cbp-button-color-border-dark: var(--cbp-color-interactive-disabled-light);
+        --cbp-button-color-border-hover-dark: var(--cbp-color-interactive-disabled-light);
       }
     }
   }
