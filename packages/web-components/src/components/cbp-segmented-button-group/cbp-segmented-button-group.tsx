@@ -38,8 +38,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies that the button group and all contained buttons are disabled. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -60,14 +60,23 @@ export class SegmentedButtonGroup {
   @Listen('componentLoad')
   handleComponentLoad({ detail: { nativeElement: element, host } }) {
     if (element) {
-      this.buttongroup = [
-        ...this.buttongroup, host
-      ];
+      if (!this.buttongroup.includes(host)) {
+        this.buttongroup = [
+          ...this.buttongroup, host
+        ];
+      }
+      if (this.disabled) {
+        host.disabled = true;
+      }
     }
   }
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) {
+      return;
+    }
+
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -99,6 +108,21 @@ export class SegmentedButtonGroup {
         nativeEvent: e
       });
     },10);
+  }
+
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    this.syncDisabledState(newValue);
+  }
+
+  private syncDisabledState(disabled: boolean) {
+    this.buttongroup.forEach(item => {
+      if (item) item.disabled = disabled;
+    });
+    const buttons: HTMLCbpButtonElement[] = Array.from(this.host.querySelectorAll('cbp-button'));
+    buttons.forEach(item => {
+      item.disabled = disabled;
+    });
   }
 
   @Watch('value')
@@ -146,6 +170,10 @@ export class SegmentedButtonGroup {
     else this.setValueFromButtons();
     
     this.initialValue = this.value;
+
+    if (this.disabled) {
+      this.syncDisabledState(true);
+    }
   }
 
 
