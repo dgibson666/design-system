@@ -100,9 +100,9 @@ const EmptyDropdownTemplate: any = ({ label, description, fieldId, name, placeho
     const Button = document.querySelector('cbp-button#populateDropdown') as HTMLCbpButtonElement;
     //console.log(Dropdown, Button);
 
-    Button.addEventListener('buttonClick', () => {
+    Button?.addEventListener('buttonClick', () => {
       console.log('Populating dropdown...');
-      Dropdown.items=States;
+      if (Dropdown) Dropdown.items=States;
     });
   }, 500);
 
@@ -280,4 +280,76 @@ DebugDropdown.args = {
   description: "A short dropdown for easier debugging",
   name: 'multiselect',
   value: '',
+};
+
+const MultiSelectReorderTemplate: any = () => {
+  const items = [
+    { label: 'Option A', value: 'A' },
+    { label: 'Option B', value: 'B', selected: true },
+    { label: 'Option C', value: 'C' },
+    { label: 'Option D', value: 'D', selected: true },
+  ];
+
+  return `
+    <div id="multi-select-reorder-container">
+      <h3>Multi-Select Reorder JSON Test</h3>
+      <cbp-form-field label="Multi Select JSON Reorder" field-id="json-reorder">
+        <cbp-dropdown
+          id="json-dropdown"
+          field-id="json-reorder"
+          multiple
+          items='${JSON.stringify(items)}'
+        >
+        </cbp-dropdown>
+      </cbp-form-field>
+
+      <h3>Multi-Select Reorder Slotted Test</h3>
+      <cbp-form-field label="Multi Select Slotted Reorder" field-id="slotted-reorder">
+        <cbp-dropdown
+          id="slotted-dropdown"
+          field-id="slotted-reorder"
+          multiple
+          value="B,D"
+        >
+          <cbp-dropdown-item value="A">
+            <cbp-checkbox><input type="checkbox" value="A" />Option A</cbp-checkbox>
+          </cbp-dropdown-item>
+          <cbp-dropdown-item value="B">
+            <cbp-checkbox><input type="checkbox" value="B" />Option B</cbp-checkbox>
+          </cbp-dropdown-item>
+          <cbp-dropdown-item value="C">
+            <cbp-checkbox><input type="checkbox" value="C" />Option C</cbp-checkbox>
+          </cbp-dropdown-item>
+          <cbp-dropdown-item value="D">
+            <cbp-checkbox><input type="checkbox" value="D" />Option D</cbp-checkbox>
+          </cbp-dropdown-item>
+        </cbp-dropdown>
+      </cbp-form-field>
+    </div>
+  `;
+};
+
+export const MultiSelectReorder = MultiSelectReorderTemplate.bind({});
+MultiSelectReorder.storyName = "Multi-Select Reorder";
+MultiSelectReorder.play = async ({ canvasElement }) => {
+  await new Promise((r) => setTimeout(r, 300));
+  const jsonDropdown = canvasElement.querySelector('#json-dropdown') as HTMLCbpDropdownElement;
+  const slottedDropdown = canvasElement.querySelector('#slotted-dropdown') as HTMLCbpDropdownElement;
+
+  if (jsonDropdown) {
+    const root = jsonDropdown.shadowRoot || jsonDropdown;
+    const jsonItems = Array.from(root.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results)'));
+    const jsonValues = jsonItems.map((item: any) => item.value);
+    if (JSON.stringify(jsonValues) !== JSON.stringify(['B', 'D', 'A', 'C'])) {
+      throw new Error(`Expected ['B', 'D', 'A', 'C'], got ${JSON.stringify(jsonValues)}`);
+    }
+  }
+
+  if (slottedDropdown) {
+    const slottedItems = Array.from(slottedDropdown.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results)'));
+    const slottedValues = slottedItems.map((item: any) => item.value);
+    if (JSON.stringify(slottedValues) !== JSON.stringify(['B', 'D', 'A', 'C'])) {
+      throw new Error(`Expected ['B', 'D', 'A', 'C'], got ${JSON.stringify(slottedValues)}`);
+    }
+  }
 };
