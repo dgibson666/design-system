@@ -64,6 +64,9 @@ export class CbpDropdown {
    */
   @Prop({ reflect: true }) multiple: boolean = false;
 
+  /** Specifies whether selected items in a multi-select dropdown should be reordered to the top of the list. */
+  @Prop({ reflect: true }) reorder: boolean = false;
+
   /** Specifies whether the dropdown accepts key presses to filter results, enabling combobox functionality. */
   @Prop({ reflect: true }) filter: boolean = false;
 
@@ -186,6 +189,10 @@ export class CbpDropdown {
         // TechDebt: this should ideally be async/promise. Update: Made selectedItems a State, so this might be fine now. Needs testing.
         let newValue = host.selected = !host.selected; // toggle the selected state of the item
 
+        if (this.reorder) {
+          this.reorderItems();
+        }
+
         setTimeout(() => {
           this.selectedItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item[selected]'));
           this.placeholder = this.selectedItems.length != 1 ? 'Selected Items' : 'Selected Item';
@@ -255,13 +262,17 @@ export class CbpDropdown {
     if (newValue) {
       // Reassigning this.dropdownitems breaks the rendering for some reason. The array is not the same as when generated.
       //this.dropdownItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item')); // Get and set this array whenever the menu is opened
-      
+
+      if (this.multiple && this.reorder) {
+        this.reorderItems();
+      }
+
       // Only set the selectedItems if they were slotted
       if (!this.items) {
         this.dropdownItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results)')); // Get and set this array whenever the menu is opened
         this.selectedItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item[selected]'));
       }
-      
+
       // Set the default Item for keyboard navigation if the items are already defined (otherwise, do it after re-rendering)
       if (this.dropdownItems.length) this.setDefaultItem();
 
@@ -353,6 +364,10 @@ export class CbpDropdown {
       item.selected = false;
     });
 
+    if (this.multiple && this.reorder) {
+      this.reorderItems();
+    }
+
     // reset the value
     this.multiple ? (this.value = []) : (this.formField.value = '');
 
@@ -387,16 +402,69 @@ export class CbpDropdown {
   }
 
 
-  // TODO: Reorder multi-select dropdowns with selected items at the start (only works with JSON items)
-  /*
-  multiSelectReorderSelected() {
-    itemsJSON = 
-    let selectedItems = this.items.filter( (item) =>  item.value ? this.value.includes(item.value) : this.value.includes(item.label));
-    let unselectedItems = this.items.filter( (item) =>  item.value ? !e.detail.value.includes(item.value) : !e.detail.value.includes(item.label));
-    // return the filtered JSON result to the component via the items property
-    this.items = [...selectedItems, ...unselectedItems];
+  /** Reorders multi-select dropdown items so selected items appear first while preserving initial order within groups. */
+  reorderItems() {
+    if (!this.multiple || !this.reorder) return;
+
+    if (this.items) {
+      if (this.generatedItems && this.generatedItems.length) {
+        const selected = this.generatedItems.filter(item => item.props?.selected);
+        const unselected = this.generatedItems.filter(item => !item.props?.selected);
+        this.generatedItems = [...selected, ...unselected];
+      }
+
+      const domItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results):not(.cbp-dropdown-create-item)')) as HTMLCbpDropdownItemElement[];
+      domItems.forEach((item, index) => {
+        if (item.dataset.initialIndex === undefined) {
+          item.dataset.initialIndex = String(index);
+        }
+      });
+
+      if (domItems.length) {
+        const selected = domItems
+          .filter(item => item.selected)
+          .sort((a, b) => Number(a.dataset.initialIndex) - Number(b.dataset.initialIndex));
+        const unselected = domItems
+          .filter(item => !item.selected)
+          .sort((a, b) => Number(a.dataset.initialIndex) - Number(b.dataset.initialIndex));
+
+        const reordered = [...selected, ...unselected];
+        const createItem = this.listbox?.querySelector('.cbp-dropdown-create-item');
+        reordered.forEach(item => {
+          if (item.parentElement) {
+            if (createItem) {
+              item.parentElement.insertBefore(item, createItem);
+            } else {
+              item.parentElement.appendChild(item);
+            }
+          }
+        });
+      }
+    } else {
+      const slottedItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results):not(.cbp-dropdown-create-item)')) as HTMLCbpDropdownItemElement[];
+      slottedItems.forEach((item, index) => {
+        if (item.dataset.initialIndex === undefined) {
+          item.dataset.initialIndex = String(index);
+        }
+      });
+
+      if (slottedItems.length) {
+        const selected = slottedItems
+          .filter(item => item.selected)
+          .sort((a, b) => Number(a.dataset.initialIndex) - Number(b.dataset.initialIndex));
+        const unselected = slottedItems
+          .filter(item => !item.selected)
+          .sort((a, b) => Number(a.dataset.initialIndex) - Number(b.dataset.initialIndex));
+
+        const reordered = [...selected, ...unselected];
+        reordered.forEach(item => {
+          this.host.appendChild(item);
+        });
+      }
+    }
+
+    this.dropdownItems = Array.from(this.host.querySelectorAll('cbp-dropdown-item:not(.cbp-dropdown-item-no-results)'));
   }
-  */
 
   // Create a new dropdown item (and select it) after the user clicked the "Create" item
   doCreateItem(e: CustomEvent){
@@ -502,6 +570,10 @@ export class CbpDropdown {
       });
       // Updating this state will cause a re-render and the number on the multi-select to update
       this.selectedItems.length > 0 ? this.selectedItems=[...selectedItems] : this.selectedItems=[];
+
+      if (this.reorder) {
+        this.reorderItems();
+      }
     }
 
     // Single select
@@ -676,6 +748,11 @@ export class CbpDropdown {
     if (Selected) this.value = newValue;
 
     if(this.multiple) {
+      if (this.reorder) {
+        const selected = generatedItems.filter(item => item.props?.selected);
+        const unselected = generatedItems.filter(item => !item.props?.selected);
+        generatedItems = [...selected, ...unselected];
+      }
       this.selectedItemCount = Selected ? SelectedItems.length : this.value.length;
       this.placeholder = this.selectedItemCount != 1 ? 'Selected Items' : 'Selected Item';
     }
@@ -1078,6 +1155,10 @@ export class CbpDropdown {
     // If there are no selected items, but a value is specified, set those items as selected
     if (!this.selectedItems.length && !!this.value) {
       this.setSelectedFromValue();
+    }
+
+    if (this.multiple && this.reorder) {
+      this.reorderItems();
     }
 
     this.initialValue = this.value;
