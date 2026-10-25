@@ -38,8 +38,8 @@ export class SegmentedButtonGroup {
   /** Specifies accessibility text used to label the group, applied to the group via aria-label. */
   @Prop() accessibilityText: string;
 
-  /* TODO: not yet implemented  */
-  @Prop() disabled: boolean;
+  /** Specifies that the segmented button group and its buttons are disabled. */
+  @Prop({ reflect: true }) disabled: boolean;
   
   /** Supports adding inline styles as an object */
   @Prop() sx: any = {};
@@ -63,11 +63,16 @@ export class SegmentedButtonGroup {
       this.buttongroup = [
         ...this.buttongroup, host
       ];
+      if (this.disabled) {
+        host.disabled = true;
+      }
     }
   }
 
   @Listen('buttonClick')
   handleButtonClick(e) {
+    if (this.disabled) return;
+
     const { detail: { nativeElement: element, host, value } } = e;
 
     // Toggle "pressed" prop on the button only when multiple selections are allowed; 
@@ -99,6 +104,14 @@ export class SegmentedButtonGroup {
         nativeEvent: e
       });
     },10);
+  }
+
+  @Watch('disabled')
+  watchDisabledHandler(newValue: boolean) {
+    const buttons = this.host.querySelectorAll('cbp-button');
+    buttons.forEach((el: HTMLCbpButtonElement) => {
+      el.disabled = newValue;
+    });
   }
 
   @Watch('value')
@@ -144,6 +157,13 @@ export class SegmentedButtonGroup {
     if(this.value != undefined) this.watchValueHandler(this.value);
     // Set the value from the pressed states
     else this.setValueFromButtons();
+
+    if (this.disabled) {
+      const buttons = this.host.querySelectorAll('cbp-button');
+      buttons.forEach((el: HTMLCbpButtonElement) => {
+        el.disabled = true;
+      });
+    }
     
     this.initialValue = this.value;
   }
@@ -154,7 +174,7 @@ export class SegmentedButtonGroup {
       <Host role="group" aria-label={this.accessibilityText}>
         <slot />
         { this.name && 
-            <input type="hidden" name={this.name} value={this.value} />
+            <input type="hidden" name={this.name} value={this.value} disabled={this.disabled} />
         }
       </Host>
     );
